@@ -228,8 +228,10 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 
 /** set output to TRUE (H or L depending on polarity) */
 #define ASSERT(pin)         _ppp_ASSERT(PORT,pin)	
+#define SET_TRUE	ASSERT
 /** set output to FALSE (H or L depending on polarity) */
 #define NEGATE(pin)         _ppp_NEGATE(PORT,pin)	
+#define SET_FALSE	NEGATE
 /** set output based on `value` (polarity aware) */
 #define SET_PA(pin,value)	_ppp_PUT_PA(PORT,pin,value)
 /** return 1 if pin is TRUE else 0 (polarity aware) */

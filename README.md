@@ -1,6 +1,7 @@
 stdpins.h
 =========
 Macros to define AVR port pins as input or output, and set/clear (polarity aware).
+Can be used with "classic" AVR projects as well as with Arduino projects.
 
   - [Introduction](#introduction)
   - [Defining a pin](#defining-a-pin)
