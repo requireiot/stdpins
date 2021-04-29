@@ -1,5 +1,5 @@
-stdpins.h
-=========
+# stdpins.h
+
 Macros to define AVR port pins as input or output, and set/clear (polarity aware).
 Can be used with "classic" AVR projects as well as with Arduino projects.
 
@@ -11,9 +11,10 @@ Can be used with "classic" AVR projects as well as with Arduino projects.
   - [Setting output pins](#setting-output-pins)
   - [Direct access to pin definition](#direct-access-to-pin-definition)
   - [Pin change interrrupts](#pin-change-interrrupts)
-  
-Introduction
-------------
+
+For more details, see [requirements](REQUIREMENTS.md)
+
+## Introduction
 
 In embedded projects with ATmega or ATtiny microcontrollers (and maybe others), assignment of port pins to functions may change multiple times, e.g. when you start working on your PCB layout and learn that it would really be easier if the LED was connected to PC2 instead of PB5 ...
 
@@ -41,14 +42,14 @@ Everything else remains the same.
 	
 Inspired by http://www.starlino.com/port_macro.html
 
-Defining a pin
---------------
+## Defining a pin
+
 The general format is 
 <pre>#define <i>name</i> <i>port</i>,<i>pin</i>,<i>polarity</i></pre>
 where *port* is one of `A`,`B`,`C`,etc., *pin* is in the range 0-7, and *polarity* is `ACTIVE_LOW` or `ACTIVE_HIGH`
 
-Configuring a pin
------------------
+## Configuring a pin
+
 Use these macros to configure a pin as output or input (with or without pull-up)
 
 | Macro               | Direction | pull-up   |
@@ -64,8 +65,8 @@ For example, this would configure pin PC2 as input and enable the pull-up resist
 AS_INPUT_PU(BUTTON);
 ```
 
-Pre-defined pins
-----------------
+# Pre-defined pins
+
 Several pins used by AVR peripherals are "pre-defined", depending on the microcontroller model. So, for an ATmega328, the symbol `_I2C_SDA` is defined as
 ```C
 #define _I2C_SDA	C,4,ACTIVE_HIGH
@@ -82,7 +83,7 @@ _delay(100);
 SET_HIGH(_I2C_SCL);
 ```
 
-When defining your logical pins, you can refer to the controller-epcific pin assignment, and just specify a polarity:
+When defining your logical pins, you can refer to the controller-specific pin assignment, and just specify a polarity:
 ```C
 #define led _OC0A(ACTIVE_LOW)
 #define button _INT0(ACTIVE_LOW)
@@ -92,8 +93,8 @@ AS_INPUT_PU(button);
 
 See header for more details.
 
-Testing input pins
-------------------
+## Testing input pins
+
 Use these macros to test an input pin:
 * `ÌS_TRUE(pin)` returns `true` if the pin is *active*, i.e. high for an `ACTIVE_HIGH` pin or low for an `ACTIVE_LOW` pin
 * `ÌS_FALSE(pin)` returns `true` if the pin is *not active*, i.e. low for an `ACTIVE_HIGH` pin or high for an `ACTIVE_LOW` pin
@@ -110,8 +111,8 @@ and the voltage at pin PC2 is currently 0 Volt, then
 * `IS_HIGH(BUTTON)` returns `false`
 * `IS_LOW(BUTTON)` returns `true`
 
-Setting output pins
--------------------
+## Setting output pins
+
 Use these macros to set the state of an output pin:
 * `ASSERT(pin)` sets the output to *active*, i.e. high for an `ACTIVE_HIGH` pin or low for an `ACTIVE_LOW` pin
 * `NEGATE(pin)` sets the output to *not active*, i.e. low for an `ACTIVE_HIGH` pin or high for an `ACTIVE_LOW` pin
@@ -120,8 +121,8 @@ Use these macros to set the state of an output pin:
 * `TOGGLE(pin)` flips the output
 * `SET_PA(pin,value)` sets the output based on expression `value`, i.e. sets it to *active* if `value!=0` or to *not active* if `value==0`
 
-Direct access to pin definition
--------------------------------
+## Direct access to pin definition
+
 Sometimes, you will need to convert your pin definition to a "classic" pin name like PC4, oryou need direct access to the port register or data direction register. Use these macros to get that access:
 
 | Macro          | Description                  | Example   |
@@ -138,8 +139,8 @@ The example is what you get if the pin has been defined as
 #define mypin C,3,ACTIVE_HIGH
 ```
 
-Pin change interrrupts
-----------------------
+## Pin change interrrupts
+
 These pin definitions can also be used in conjunction with pin change interrupts (in controllers that support this feature).
 
 Say you have connected a button to input PC2 of your ATmega328:
@@ -176,3 +177,7 @@ PCI_ISR(button) {
 There are also matching `PCI_DISABLE(pin)`and `PCIEx_DISABLE(pin)` macros.
 
 All of this works well if you use only *one* pin change interrupt per port. If you want to use more than one pin change interrupt on the same port, the refer to the ATmega datasheet to understand how these interrupts are enabled and disabled in groups.
+
+## Acknowledgements
+
+Inspired by http://www.starlino.com/port_macro.html
