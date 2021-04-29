@@ -1,7 +1,23 @@
 # stdpins.h
 
-Macros to define AVR port pins as input or output, and set/clear (polarity aware).
-Can be used with "classic" AVR projects as well as with Arduino projects.
+When working on a microcontroller project in C, we often capture the mapping of a function to a physical pin with preprocessor macros, like so
+```C
+// button is connected to PB5
+#define BUTTON_PORT  PINB
+#define BUTTON_BIT   5
+```
+and we use those definitions later in our code
+```C
+// test if button is pressed
+if (BUTTON_PORT & (1 << BUTTON_BIT)) { do_something(); }
+```
+If we later decide that the PCB layout is easier if we connect the button to PC3 instead of PB5, we just change the two lines above.
+
+But what if we need to change the logic, so the button input is low when pressed? What if we want to use a pin change interrupt for that signal? The simple #defines won't do it anymore.
+
+That's where the `<stdpins.h>` header comes in: it allows you to define port name, pin number *and polarity* in one place, and then refer to that definition throughout your code, for basic I/O, and for pin change interrupts.
+
+It can be used with "classic" AVR projects as well as with Arduino projects.
 
   - [Introduction](#introduction)
   - [Defining a pin](#defining-a-pin)
@@ -18,7 +34,7 @@ For more details, see [requirements](REQUIREMENTS.md)
 
 In embedded projects with ATmega or ATtiny microcontrollers (and maybe others), assignment of port pins to functions may change multiple times, e.g. when you start working on your PCB layout and learn that it would really be easier if the LED was connected to PC2 instead of PB5 ...
 
-This simple header file allows you to map a logical *pin* to a port and bit number, and define polarity (active high or active low), in *one* place, and then refer to that definition throughout your code.
+This simple header file allows you to map a logical *pin* to a port name and bit number, and define polarity (active high or active low), in *one* place, and then refer to that definition throughout your code.
 	
 Say we have an LED connected to PB5, and the light is on if PB5=Low
 ``` C
@@ -39,8 +55,6 @@ If the schematics change and LED is now connected to PC2, and turns on if PC2=Hi
 #define led C,2,ACTIVE_HIGH
 ```
 Everything else remains the same.
-	
-Inspired by http://www.starlino.com/port_macro.html
 
 ## Defining a pin
 
