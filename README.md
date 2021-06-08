@@ -79,7 +79,7 @@ For example, this would configure pin PC2 as input and enable the pull-up resist
 AS_INPUT_PU(BUTTON);
 ```
 
-# Pre-defined pins
+## Pre-defined pins
 
 Several pins used by AVR peripherals are "pre-defined", depending on the microcontroller model. So, for an ATmega328, the symbol `_I2C_SDA` is defined as
 ```C

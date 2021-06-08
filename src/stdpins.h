@@ -4,7 +4,7 @@
  * Author		: Bernd Waldmann
  * Tabsize		: 4
  *
- * This Revision: $Id: stdpins.h 448 2018-11-03 23:06:04Z  $
+ * This Revision: $Id: stdpins.h 996 2021-05-07 08:02:26Z  $
  */
 
 /*
@@ -151,6 +151,7 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 #define _ppp_PCIEx_ENABLE(name,bit,pol)	    PCICR |= _BV( _PCIE ## name )
 #define _ppp_PCIEx_DISABLE(name,bit,pol)	PCICR &= ~_BV( _PCIE ## name )
 #define _ppp_PCIFx_CLEAR(name,bit,pol)	    PCIFR &= ~_BV( _PCIE ## name )
+#define _ppp_PCIFx_TEST(name,bit,pol)	    (PCIFR & _BV( _PCIE ## name ))
 
 #define _PINDEF3(a,b,c)	a,b,c
 
@@ -173,14 +174,58 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 
 //! @name Data direction
 //!@{
-/** @brief set as input, pull-up undefined */
+/** set as input, pull-up undefined */
 #define AS_INPUT(pin)       _ppp_CLR(DDR,pin)
-/** @brief set as input, with pull-up */
+/** set as input, with pull-up */
 #define AS_INPUT_PU(pin)    _ppp_CLR(DDR,pin); _ppp_SET(PORT,pin)
-/** @brief set as output, without pull-up */
-#define AS_INPUT_FLOAT(pin)    _ppp_CLR(DDR,pin); _ppp_CLR(PORT,pin)
-/** @brief set as output */
+/** set as output, without pull-up */
+#define AS_INPUT_FLOAT(pin) _ppp_CLR(DDR,pin); _ppp_CLR(PORT,pin)
+/** set as output */
 #define AS_OUTPUT(pin)      _ppp_SET(DDR,pin)
+/** Enable pull-up resistor */
+#define PULLUP_ENABLE(pin)  _ppp_SET(PORT,pin)
+/** Disable pull-up resistor */
+#define PULLUP_DISABLE(pin) _ppp_CLR(PORT,pin)
+//!@}
+
+//! @name Get/set, ignore polarity 
+//!@{
+
+/** read port, mask all but relevant bit */
+#define READ(pin)           _ppp_READ(PIN,pin)
+/** flip output */
+#define TOGGLE(pin)         _ppp_TOGGLE(PORT,pin)
+/** set output Hi (independent of polarity) */
+#define SET_HIGH(pin)       _ppp_SET(PORT,pin)
+/** set output Lo (independent of polarity) */
+#define SET_LOW(pin)        _ppp_CLR(PORT,pin)
+/** set output to (value), not polarity aware */
+#define SET(pin,value)		_ppp_PUT(PORT,pin,value)
+/** set outputs to (value), not polarity aware */
+#define SET_MULT(pin,nbits,value)   _ppp_PUT_MULT(PORT,pin,nbits,value)
+/** return 1 if pin is Hi else 0 */
+#define IS_HIGH(pin)        _ppp_ISHIGH(PIN,pin)
+/** return 0 if pin is Hi else 1 */
+#define IS_LOW(pin)         !_ppp_ISHIGH(PIN,pin)
+//!@}
+
+//! @name Get/set, polarity aware 
+//!@{
+
+/** set output to TRUE (H or L depending on polarity) */
+#define ASSERT(pin)         _ppp_ASSERT(PORT,pin)	
+/** set output to TRUE (H or L depending on polarity) -- synonym for ASSERT */
+#define SET_TRUE	ASSERT
+/** set output to FALSE (H or L depending on polarity) */
+#define NEGATE(pin)         _ppp_NEGATE(PORT,pin)	
+/** set output to FALSE (H or L depending on polarity) -- synonym for NEGATE */
+#define SET_FALSE	NEGATE
+/** set output based on `value` (polarity aware) */
+#define SET_PA(pin,value)	_ppp_PUT_PA(PORT,pin,value)
+/** return 1 if pin is TRUE else 0 (polarity aware) */
+#define IS_TRUE(pin)		_ppp_ISTRUE(PIN,pin)
+/** return 1 if pin is FALSE else 0 (polarity aware) */
+#define IS_FALSE(pin)		!_ppp_ISTRUE(PIN,pin)
 //!@}
 
 /** @name Classic names
@@ -188,6 +233,8 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
  *  from `#define LED A,5,ACTIVE_HIGH`
  */
 //!@{
+/** return bit mask for pin */
+#define BV(pin)             _ppp_BV(pin)
 /** return output port name like PORTA */
 #define PORT(pin)			_ppp_NAME(PORT,pin)
 /** return DDR name like DDRA */
@@ -200,47 +247,6 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 #define portNAME(pin)		_ppp_LETTER(pin)
 //!@}
 
-//! @name Get/set, ignore polarity 
-//!@{
-
-/** return bit mask for pin */
-#define BV(pin)             _ppp_BV(pin)
-/** return port & _BV(bit) */
-#define READ(pin)           _ppp_READ(PIN,pin)
-/** flip output */
-#define TOGGLE(pin)         _ppp_TOGGLE(PORT,pin)
-/** set output H (independent of polarity) */
-#define SET_HIGH(pin)       _ppp_SET(PORT,pin)
-/** set output L (independent of polarity) */
-#define SET_LOW(pin)        _ppp_CLR(PORT,pin)
-/** set output to (value), not polarity aware */
-#define SET(pin,value)		_ppp_PUT(PORT,pin,value)
-/** set outputs to (value), not polarity aware */
-#define SET_MULT(pin,nbits,value)   _ppp_PUT_MULT(PORT,pin,nbits,value)
-/** return 1 if pin is H else 0 */
-#define IS_HIGH(pin)        _ppp_ISHIGH(PIN,pin)
-/** return 0 if pin is H else 1 */
-#define IS_LOW(pin)         !_ppp_ISHIGH(PIN,pin)
-//!@}
-
-//! @name Get/set, polarity aware 
-//!@{
-
-/** set output to TRUE (H or L depending on polarity) */
-#define ASSERT(pin)         _ppp_ASSERT(PORT,pin)	
-#define SET_TRUE	ASSERT
-/** set output to FALSE (H or L depending on polarity) */
-#define NEGATE(pin)         _ppp_NEGATE(PORT,pin)	
-#define SET_FALSE	NEGATE
-/** set output based on `value` (polarity aware) */
-#define SET_PA(pin,value)	_ppp_PUT_PA(PORT,pin,value)
-/** return 1 if pin is TRUE else 0 (polarity aware) */
-#define IS_TRUE(pin)		_ppp_ISTRUE(PIN,pin)
-/** return 1 if pin is FALSE else 0 (polarity aware) */
-#define IS_FALSE(pin)		!_ppp_ISTRUE(PIN,pin)
-//!@}
-
-
 //! @name Pin change interrupt
 //!@{
 
@@ -252,8 +258,10 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 #define PCIEx_ENABLE(pin)	_ppp_PCIEx_ENABLE(pin)
 /** disable pin change interrupts for this port (enable PCI group 0|1|2) */
 #define PCIEx_DISABLE(pin)	_ppp_PCIEx_DISABLE(pin)
-/** reset interrupt flag for this pin */
+/** reset interrupt flag for this pin group */
 #define PCIFx_CLEAR(pin)	_ppp_PCIFx_CLEAR(pin)
+/** return !=0 if interrupt flag for this pin group is set */
+#define PCIFx_TEST(pin)	_ppp_PCIFx_CLEAR(pin)
 /** return name of PCIE register for this pin (PCIE0, PCIE1 or PCIE2) */
 #define PCIEx(pin)			_ppp_PCIEx(pin)
 /** expands to `ISR(PCINTx_vect)` */
@@ -286,6 +294,11 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 
 	#define _INT0(pol)	_PINDEF3(D,2,pol)
 	#define _INT1(pol)	_PINDEF3(D,3,pol)
+
+    #define _SPI_SCK    B,5,ACTIVE_HIGH
+    #define _SPI_MISO   B,4,ACTIVE_HIGH
+    #define _SPI_MOSI   B,3,ACTIVE_HIGH
+    #define _SPI_SS     B,2,ACTIVE_LOW
 //!@}
 
 #elif defined(__AVR_ATtiny2313__) || defined(__AVR_ATtiny2313A__) || defined(__AVR_ATtiny4313__)
@@ -313,6 +326,9 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 	#define _OC1B(pol)	_PINDEF3(B,4,pol)
 	#define _nOC1B(pol)	_PINDEF3(B,3,pol)
 
+	#define _I2C_SDA	B,0,ACTIVE_HIGH
+	#define _I2C_SCL	B,2,ACTIVE_HIGH
+
 #elif defined(IS_Mxx4)
 
 	#define _OC0A(pol)	_PINDEF3(B,3,pol)
@@ -332,6 +348,11 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 
 	#define _I2C_SDA	C,1,ACTIVE_HIGH
 	#define _I2C_SCL	C,0,ACTIVE_HIGH
+
+    #define _SPI_SCK    B,7,ACTIVE_HIGH
+    #define _SPI_MISO   B,6,ACTIVE_HIGH
+    #define _SPI_MOSI   B,5,ACTIVE_HIGH
+    #define _SPI_SS     B,4,ACTIVE_LOW
 
 	#define _INT0(pol)	_PINDEF3(D,2,pol)
 	#define _INT1(pol)	_PINDEF3(D,3,pol)
@@ -353,6 +374,11 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 
 	#define _I2C_SDA	C,1,ACTIVE_HIGH
 	#define _I2C_SCL	C,0,ACTIVE_HIGH
+
+    #define _SPI_SCK    B,7,ACTIVE_HIGH
+    #define _SPI_MISO   B,6,ACTIVE_HIGH
+    #define _SPI_MOSI   B,5,ACTIVE_HIGH
+    #define _SPI_SS     B,4,ACTIVE_LOW
 
 	#define _INT0(pol)	_PINDEF3(D,2,pol)
 	#define _INT1(pol)	_PINDEF3(D,3,pol)
