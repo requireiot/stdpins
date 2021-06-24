@@ -4,7 +4,7 @@
  * Author		: Bernd Waldmann
  * Tabsize		: 4
  *
- * This Revision: $Id: stdpins.h 996 2021-05-07 08:02:26Z  $
+ * This Revision: $Id: stdpins.h 1127 2021-06-24 09:02:00Z  $
  */
 
 /*
