@@ -4,7 +4,7 @@
  * Author		: Bernd Waldmann
  * Tabsize		: 4
  *
- * This Revision: $Id: stdpins.h 1127 2021-06-24 09:02:00Z  $
+ * This Revision: $Id: stdpins.h 1179 2021-07-18 07:13:01Z  $
  */
 
 /*
@@ -62,6 +62,16 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 #endif
 
 // ===========================================================================
+// public constants
+
+//! @name Polarity
+//!@{
+#define ACTIVE_HIGH	1
+#define ACTIVE_LOW  0
+#define ACTIVE_LOW_OC -1
+//!@}
+
+// ===========================================================================
 // use pin toggle function available in ATmega
 
 #if defined(IS_Mxx8) || defined(IS_Mxx4)
@@ -75,7 +85,7 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 // mainly for string concatenation
 // pin specified as name,bit,polarity
 
-// set, reset etc -- not polarity-aware
+// ----- set, reset etc -- not polarity-aware
 
 #define _ppp_BV(name,bit,pol)               _BV(bit)
 // return port & _BV(bit)
@@ -92,24 +102,57 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 // return 1 if bit is H else 0
 #define _ppp_ISHIGH(type,name,bit,pol)		((type ## name >> bit) &  1)
 
-// set, reset etc -- polarity-aware
+// ----- set, reset etc -- polarity-aware
 
-#define _ppp_ISACTIVEHIGH(name,bit,pol)	    (pol != 0)
-// set bit to TRUE (polarity-aware)
-#define _ppp_ASSERT(type,name,bit,pol)		if (pol) { _ppp_SET(type,name,bit,pol); } else { _ppp_CLR(type,name,bit,pol); }
-// set bit to FALSE (polarity-aware)
-#define _ppp_NEGATE(type,name,bit,pol)		if (pol) { _ppp_CLR(type,name,bit,pol); } else { _ppp_SET(type,name,bit,pol); }
+#define _ppp_ISACTIVEHIGH(name,bit,pol)	    (pol==ACTIVE_HIGH)
+#define _ppp_IS_OC(name,bit,pol)	        (pol==ACTIVE_LOW_OC)
+
+// set bit to true (LOW, open collector)
+#define _ppp_ASSERT_OC(name,bit,pol)        \
+    { _ppp_CLR(PORT,name,bit,pol); _ppp_SET(DDR,name,bit,pol); }
+
+// set bit to false (OFF, open collector)
+#define _ppp_NEGATE_OC(name,bit,pol)        \
+    { _ppp_CLR(PORT,name,bit,pol); _ppp_CLR(DDR,name,bit,pol); }
+
+// set bit to TRUE (polarity-aware, push-pull output)
+#define _ppp_ASSERT_PP(name,bit,pol)		\
+    if (pol==ACTIVE_HIGH)                   \
+        { _ppp_SET(PORT,name,bit,pol); }    \
+    else                                    \
+        { _ppp_CLR(PORT,name,bit,pol); }
+
+// set bit to FALSE (polarity-aware, push-pull output)
+#define _ppp_NEGATE_PP(name,bit,pol)		\
+    if (pol==ACTIVE_HIGH)                   \
+        { _ppp_CLR(PORT,name,bit,pol); }    \
+    else                                    \
+        { _ppp_SET(PORT,name,bit,pol); }
+
 // set bit to <value> (polarity-aware)
 #define _ppp_PUT_PA(type,name,bit,pol,val)   _ppp_PUT(type,name,bit,pol,((pol==ACTIVE_HIGH) ? (val) : !(val)))
-// return 1 if bit is H else 0
-#define _ppp_ISTRUE(type,name,bit,pol)		( (pol) ? _ppp_ISHIGH(type,name,bit,pol) : !_ppp_ISHIGH(type,name,bit,pol) )
 
-// get port, DDR, bit
+// return 1 if bit is H else 0
+#define _ppp_ISTRUE(type,name,bit,pol)		( (pol==ACTIVE_HIGH) ? _ppp_ISHIGH(type,name,bit,pol) : !_ppp_ISHIGH(type,name,bit,pol) )
+
+#define _ppp_ASSERT(name,bit,pol)           \
+    if (pol==ACTIVE_LOW_OC)                 \
+        { _ppp_ASSERT_OC(name,bit,pol); }   \
+    else                                    \
+        { _ppp_ASSERT_PP(name,bit,pol); }
+
+#define _ppp_NEGATE(name,bit,pol)           \
+    if (pol==ACTIVE_LOW_OC)                 \
+        { _ppp_NEGATE_OC(name,bit,pol); }   \
+    else                                    \
+        { _ppp_NEGATE_PP(name,bit,pol); }
+
+// ----- get port, DDR, bit
 #define _ppp_NAME(type,name,bit,pol)		(type ## name)
 #define _ppp_BIT(name,bit,pol)				(bit)
 #define _ppp_LETTER(name,bit,pol)			name
 
-// aliases for pin change interrupt registers
+// ----- aliases for pin change interrupt registers
 #if defined(IS_Mxx4)    // ATmega 164, 324, 644, 1284
     #define _PCMSKA	PCMSK0
     #define _PCMSKB	PCMSK1
@@ -158,17 +201,6 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 /** @{ */
 
 // ===========================================================================
-// public constants
-
-//! @name Polarity
-//!@{
-#define ACTIVE_HIGH	1
-#define ACTIVE_LOW  0
-/** @brief return TRUE if polarity is ACTIVE_HIGH */
-#define IS_ACTIVE_HIGH(pin)	_ppp_ISACTIVEHIGH(pin)
-//!@}
-
-// ===========================================================================
 // public macros - these macros are used by end user
 // <pin> is a combined port,bit,polarity value
 
@@ -191,6 +223,11 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 //! @name Get/set, ignore polarity 
 //!@{
 
+/** return TRUE if polarity is ACTIVE_HIGH */
+#define IS_ACTIVE_HIGH(pin)	_ppp_ISACTIVEHIGH(pin)
+/** return TRUE if polarity is ACTIVE_LOW_OC */
+#define IS_OC(pin)	_ppp_IS_OC(pin)
+
 /** read port, mask all but relevant bit */
 #define READ(pin)           _ppp_READ(PIN,pin)
 /** flip output */
@@ -212,12 +249,17 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 //! @name Get/set, polarity aware 
 //!@{
 
+/** set "open collector" output  to active(low) */
+#define ASSERT_OC(pin)      _ppp_CLR(PORT,pin); _ppp_SET(DDR,pin)
+/** set "open collector" output to inactive (high) */
+#define NEGATE_OC(pin)      _ppp_CLR(PORT,pin); _ppp_CLR(DDR,pin)
 /** set output to TRUE (H or L depending on polarity) */
-#define ASSERT(pin)         _ppp_ASSERT(PORT,pin)	
+
+#define ASSERT(pin)         _ppp_ASSERT(pin)	
 /** set output to TRUE (H or L depending on polarity) -- synonym for ASSERT */
 #define SET_TRUE	ASSERT
 /** set output to FALSE (H or L depending on polarity) */
-#define NEGATE(pin)         _ppp_NEGATE(PORT,pin)	
+#define NEGATE(pin)         _ppp_NEGATE(pin)	
 /** set output to FALSE (H or L depending on polarity) -- synonym for NEGATE */
 #define SET_FALSE	NEGATE
 /** set output based on `value` (polarity aware) */
@@ -226,6 +268,7 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 #define IS_TRUE(pin)		_ppp_ISTRUE(PIN,pin)
 /** return 1 if pin is FALSE else 0 (polarity aware) */
 #define IS_FALSE(pin)		!_ppp_ISTRUE(PIN,pin)
+
 //!@}
 
 /** @name Classic names
