@@ -29,8 +29,13 @@ int main()
 
     // make LED follow button
     bool state;
+    int pin;
     for (;;) {
         state = IS_TRUE(button);
         SET_PA(led,state);
+        pin = ARDUINO_PIN(led);
+        PORTD = pin;
     }
+
+    
 }

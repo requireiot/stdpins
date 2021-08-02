@@ -4,7 +4,7 @@
  * Author		: Bernd Waldmann
  * Tabsize		: 4
  *
- * This Revision: $Id: stdpins.h 1179 2021-07-18 07:13:01Z  $
+ * This Revision: $Id: stdpins.h 1215 2021-08-02 15:57:00Z  $
  */
 
 /*
@@ -87,6 +87,7 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 
 // ----- set, reset etc -- not polarity-aware
 
+// convert bit number 0..7 to bit mask 0x01..0x80
 #define _ppp_BV(name,bit,pol)               _BV(bit)
 // return port & _BV(bit)
 #define _ppp_READ(type,name,bit,pol)		((type ## name) & (1 << bit))
@@ -94,7 +95,7 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 #define _ppp_SET(type,name,bit,pol)			type ## name |= _BV(bit)		
 // set bit to L
 #define _ppp_CLR(type,name,bit,pol)			type ## name  &= ~ _BV(bit)		
-// set bit to <value>
+// set bit to 1 if <value>!=0 else set to 0
 #define _ppp_PUT(type,name,bit,pol,value)	type ## name = ( type ## name & ~_BV(bit) ) | ( (value) ? _BV(bit) : 0 )
 // set multiple bits to <value>
 #define _ppp_PUT_MULT(type,name,bit1,pol,nbits,value)   type ## name = (((type ## name) & ~(((1 << (nbits))-1) << bit1)) | ((value) << bit1))
@@ -168,6 +169,7 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
     #define _PCINTB_vect PCINT1_vect
     #define _PCINTC_vect PCINT2_vect
     #define _PCINTD_vect PCINT3_vect
+
 #elif defined(IS_Mxx8)  // ATmega 48,88,168,328
     #define _PCMSKB	PCMSK0
     #define _PCMSKC	PCMSK1
@@ -180,6 +182,7 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
     #define _PCINTB_vect PCINT0_vect
     #define _PCINTC_vect PCINT1_vect
     #define _PCINTD_vect PCINT2_vect
+
 #else   // ATtiny 25,45,85, 2313
     #define _PCMSKB	PCMSK0
 
@@ -197,6 +200,23 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 #define _ppp_PCIFx_TEST(name,bit,pol)	    (PCIFR & _BV( _PCIE ## name ))
 
 #define _PINDEF3(a,b,c)	a,b,c
+
+// ----- aliases for Arduino pin groups
+
+#if defined(IS_Mxx4)    // ATmega 164, 324, 644, 1284
+    // MightyCore standard layout
+    #define _ARDUINO_PIN_BASE_A     24
+    #define _ARDUINO_PIN_BASE_B     0
+    #define _ARDUINO_PIN_BASE_C     16
+    #define _ARDUINO_PIN_BASE_D     8
+#elif defined(IS_Mxx8)  // ATmega 48,88,168,328
+    #define _ARDUINO_PIN_BASE_B     8
+    #define _ARDUINO_PIN_BASE_C     14
+    #define _ARDUINO_PIN_BASE_D     0
+#endif
+
+#define _ppp_ARDUINO_PIN_BASE(name)         (_ARDUINO_PIN_BASE_ ## name)
+#define _ppp_ARDUINO_PIN(name,bit,pol)      ( bit + _ppp_ARDUINO_PIN_BASE(name) )
 
 /** @{ */
 
@@ -288,6 +308,9 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 #define portBIT(pin)		_ppp_BIT(pin)
 /** return output port name like A */
 #define portNAME(pin)		_ppp_LETTER(pin)
+
+#define ARDUINO_PIN(pin)    _ppp_ARDUINO_PIN(pin)
+
 //!@}
 
 //! @name Pin change interrupt

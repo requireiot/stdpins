@@ -1,6 +1,6 @@
 # stdpins.h
 
-When working on a microcontroller project in C, we often capture the mapping of a function to a physical pin with preprocessor macros, like so
+When working on a microcontroller project in C, we often capture the mapping of a signal to a physical pin with preprocessor macros, like so
 ```C
 // button is connected to PB5
 #define BUTTON_PORT  PINB
@@ -32,7 +32,7 @@ For more details, see [requirements](REQUIREMENTS.md)
 
 ## Introduction
 
-In embedded projects with ATmega or ATtiny microcontrollers (and maybe others), assignment of port pins to functions may change multiple times, e.g. when you start working on your PCB layout and learn that it would really be easier if the LED was connected to PC2 instead of PB5 ...
+In embedded projects with ATmega or ATtiny microcontrollers (and maybe others), assignment of port pins to signals may change multiple times, e.g. when you start working on your PCB layout and learn that it would really be easier if the LED was connected to PC2 instead of PB5 ...
 
 This simple header file allows you to map a logical *pin* to a port name and bit number, and define polarity (active high or active low), in *one* place, and then refer to that definition throughout your code.
 	
@@ -60,7 +60,12 @@ Everything else remains the same.
 
 The general format is 
 <pre>#define <i>name</i> <i>port</i>,<i>pin</i>,<i>polarity</i></pre>
-where *port* is one of `A`,`B`,`C`,etc., *pin* is in the range 0-7, and *polarity* is `ACTIVE_LOW` or `ACTIVE_HIGH`
+where *port* is one of `A`,`B`,`C`,etc., *pin* is in the range 0-7, and *polarity* is `ACTIVE_LOW` or `ACTIVE_HIGH`.
+
+### Open-collector outputs 
+You can also specity a "polarity" of `ACTIVE_LOW_OC` for an active-low open-collector output. 
+
+AVR controllers don't really have pins that can be programmed as open-collector outputs, like teh more modern STM controllers. But we can simulate this: to set an output active (low), program the pin as output and low-level, and to set an output inactive (high), program it as an input withput a pull-up)
 
 ## Configuring a pin
 
@@ -137,7 +142,7 @@ Use these macros to set the state of an output pin:
 
 ## Direct access to pin definition
 
-Sometimes, you will need to convert your pin definition to a "classic" pin name like PC4, oryou need direct access to the port register or data direction register. Use these macros to get that access:
+Sometimes, you will need to convert your pin definition to a "classic" pin name like PC4, or you need direct access to the port register or data direction register. Use these macros to get that access:
 
 | Macro          | Description                  | Example   |
 | -------------- | ---------------------------- | ------- |
@@ -152,6 +157,16 @@ The example is what you get if the pin has been defined as
 ```C
 #define mypin C,3,ACTIVE_HIGH
 ```
+
+## Converting `stdpins.h` pin definitions to Arduino pin numbers
+
+When you need to specify a pin to an Arduino library function, use the `ARDUINO_PIN` macro:
+```
+#define led B,5,ACTIVE_HIGH
+int pin = ARDUINO_PIN(led);  // will set pin=13 on an ATmega328
+someArduinoFunction(pin);
+```
+Currently, this only works for ATmega168/328 based Arduino boards, and for ATmega324/644/1284 using the [MightyCore](https://github.com/MCUdude/MightyCore) Arduino core with the "Standard" pinout.
 
 ## Pin change interrrupts
 

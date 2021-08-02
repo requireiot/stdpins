@@ -2,12 +2,14 @@
 
 ## Objectives
 
-1. Define port and pin used for a function, easily changed later in the development process
-2. Define polarity of a function, i. e. active high or active low, easily changed later
+1. Define port and pin used for a signal, easily changed later in the development process
+2. Define polarity of a signal, i. e. active high or active low, easily changed later in the development process
 3. use port/pin/polarity definition for regular input/output
-4. use port/pin/polarity for pin change interrupt applications
-5. also be able to use 3rd party libraries such as VUSB or IRMP, which require specifying a port and pin as separate #defines, 
-6. Refer to pins with alternate functions like RXD0 or OC1B in a manner that is independent of the controller type (e. g. on ATtiny85, OC0B is PB1, but on ATmega328, OC0B is PD5)
+4. Simulate open-collector outputs 
+5. use port/pin/polarity for pin change interrupt applications
+6. also be able to use 3rd party libraries such as VUSB or IRMP, which require specifying a port letter and pin number as separate #defines, 
+7. also be able to use Arduino libraries, which refer to pins by the number used in the Arduino IDE
+8. Refer to pins with alternate functions like RXD0 or OC1B in a manner that is independent of the controller model (e. g. is PB1 on ATtiny85, but PD5 on ATmega328, and PD4 on ATmega644)
 
 ## Requirements
 
@@ -32,6 +34,11 @@
   - [x] `R013.2` test if input is high or low (not polarity aware)
 - [x] `R014` Define data direction using defined port/pin, as one of input (pull-up undefined), input with pull-up, input without pull-up, output
 
+### Open-collector outputs
+
+ - [x] `R015` declare an output as open-collector (implies active-low polarity)
+ - [x] `R016` simulate open-collector behavior when setting the output value
+
 ### Alternate function names
 
 - [x] `R021` define alternate function names that can be used like normal pin/port/polarity definitions, independent of controller type
@@ -42,8 +49,11 @@
 
 ### Compatibility with other libraries
 
-- [x]  `R031` extract port name like 'A', 'B', 'C' from port&pin definition
-- [x]  `R032` extract bit number 0..7 from port&pin definition
+- [x]  `R031` extract port name like 'A', 'B', 'C' from port & pin definition
+- [x]  `R032` extract bit number 0..7 from port & pin definition
+- [x]  `R033` calculate Arduino pin number from port & pin 
+ - [x]  `R033.1`  calculate Arduino pin number for ATmega168/328 based boards 
+ - [x]  `R033.2` calculate Arduino pin number for ATmega324/644/1284 based boards
 
 ### Support for pin change interrupts
 
