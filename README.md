@@ -207,6 +207,28 @@ There are also matching `PCI_DISABLE(pin)`and `PCIEx_DISABLE(pin)` macros.
 
 All of this works well if you use only *one* pin change interrupt per port. If you want to use more than one pin change interrupt on the same port, the refer to the ATmega datasheet to understand how these interrupts are enabled and disabled in groups.
 
+## Performance
+
+A nice side effect is that using the macros in this package also consumes less memory, and is faster than the standard Arduino I/O functions. I tested this on an Arduino Nano clone at 16 MHz. A simple loop that toggles an output pin using the `stdpins` macros looks like this
+```
+    #define LED B,5,ACTIVE_HIGH
+    for (;;) {
+        NEGATE(LED);
+        ASSERT(LED);
+    }
+```
+If you use the Arduino functions, it would look like this
+```
+    #define pinLED 13
+    for(;;) {
+        digitalWrite( pinLED, LOW );
+        digitalWrite( pinLED, HIGH );
+    }
+```
+A minimal program with this loop uses 438 bytes flash memory with `stdpins`, and 722 bytes with the Arduino functions. 
+
+One cycle through the loop takes 0.375µs with `stdpins`, and 6.7µs with Arduino ... if the pin value is known at compile time. If the pin value is in a variable, so you use `SET_PA(LED;var)` or `digitalWrite(pinLED,var)`, then the times are 1.6µs vs 7.0µs.
+
 ## Acknowledgements
 
 Inspired by http://www.starlino.com/port_macro.html

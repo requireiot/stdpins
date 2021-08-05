@@ -4,7 +4,7 @@
  * Author		: Bernd Waldmann
  * Tabsize		: 4
  *
- * This Revision: $Id: stdpins.h 1215 2021-08-02 15:57:00Z  $
+ * This Revision: $Id: stdpins.h 1228 2021-08-05 08:15:34Z  $
  */
 
 /*
@@ -118,17 +118,22 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 
 // set bit to TRUE (polarity-aware, push-pull output)
 #define _ppp_ASSERT_PP(name,bit,pol)		\
+  do {                                      \
     if (pol==ACTIVE_HIGH)                   \
         { _ppp_SET(PORT,name,bit,pol); }    \
     else                                    \
-        { _ppp_CLR(PORT,name,bit,pol); }
+        { _ppp_CLR(PORT,name,bit,pol); }    \
+  } while (0)
+
 
 // set bit to FALSE (polarity-aware, push-pull output)
 #define _ppp_NEGATE_PP(name,bit,pol)		\
+  do {                                      \
     if (pol==ACTIVE_HIGH)                   \
         { _ppp_CLR(PORT,name,bit,pol); }    \
     else                                    \
-        { _ppp_SET(PORT,name,bit,pol); }
+        { _ppp_SET(PORT,name,bit,pol); }    \
+  } while (0)
 
 // set bit to <value> (polarity-aware)
 #define _ppp_PUT_PA(type,name,bit,pol,val)   _ppp_PUT(type,name,bit,pol,((pol==ACTIVE_HIGH) ? (val) : !(val)))
@@ -137,16 +142,20 @@ defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 #define _ppp_ISTRUE(type,name,bit,pol)		( (pol==ACTIVE_HIGH) ? _ppp_ISHIGH(type,name,bit,pol) : !_ppp_ISHIGH(type,name,bit,pol) )
 
 #define _ppp_ASSERT(name,bit,pol)           \
+  do {                                      \
     if (pol==ACTIVE_LOW_OC)                 \
         { _ppp_ASSERT_OC(name,bit,pol); }   \
     else                                    \
-        { _ppp_ASSERT_PP(name,bit,pol); }
+        { _ppp_ASSERT_PP(name,bit,pol); }   \
+  } while (0)
 
 #define _ppp_NEGATE(name,bit,pol)           \
+  do {                                      \
     if (pol==ACTIVE_LOW_OC)                 \
         { _ppp_NEGATE_OC(name,bit,pol); }   \
     else                                    \
-        { _ppp_NEGATE_PP(name,bit,pol); }
+        { _ppp_NEGATE_PP(name,bit,pol); }   \
+  } while (0)
 
 // ----- get port, DDR, bit
 #define _ppp_NAME(type,name,bit,pol)		(type ## name)
