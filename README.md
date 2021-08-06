@@ -15,7 +15,7 @@ If we later decide that the PCB layout is easier if we connect the button to PC3
 
 But what if we need to change the logic, so the button input is low when pressed? What if we want to use a pin change interrupt for that signal? The simple #defines won't do it anymore.
 
-That's where the `<stdpins.h>` header comes in: it allows you to define port name, pin number *and polarity* in one place, and then refer to that definition throughout your code, for basic I/O, and for pin change interrupts.
+That's where the `<stdpins.h>` header comes in: it allows you to define port name, pin number *and polarity* in one place, and then refer to that signal definition throughout your code, for basic I/O, and for pin change interrupts.
 
 It can be used with "classic" AVR projects as well as with Arduino projects.
 
@@ -32,9 +32,9 @@ For more details, see [requirements](REQUIREMENTS.md)
 
 ## Introduction
 
-In embedded projects with ATmega or ATtiny microcontrollers (and maybe others), assignment of port pins to signals may change multiple times, e.g. when you start working on your PCB layout and learn that it would really be easier if the LED was connected to PC2 instead of PB5 ...
+In embedded projects with ATmega or ATtiny microcontrollers (and maybe others), assignment of signals to port pins may change multiple times, e.g. when you start working on your PCB layout and learn that it would really be easier if the LED was connected to PC2 instead of PB5 ...
 
-This simple header file allows you to map a logical *pin* to a port name and bit number, and define polarity (active high or active low), in *one* place, and then refer to that definition throughout your code.
+`<stdpins.h>` allows you to map a logical *signal* to a port name and bit number, and define polarity (active high or active low), in *one* place, and then refer to that definition throughout your code.
 	
 Say we have an LED connected to PB5, and the light is on if PB5=Low
 ``` C
@@ -56,16 +56,16 @@ If the schematics change and LED is now connected to PC2, and turns on if PC2=Hi
 ```
 Everything else remains the same.
 
-## Defining a pin
+## Defining a signal
 
 The general format is 
-<pre>#define <i>name</i> <i>port</i>,<i>pin</i>,<i>polarity</i></pre>
-where *port* is one of `A`,`B`,`C`,etc., *pin* is in the range 0-7, and *polarity* is `ACTIVE_LOW` or `ACTIVE_HIGH`.
+<pre>#define <i>signalname</i> <i>port</i>,<i>bit</i>,<i>polarity</i></pre>
+where *port* is one of `A`,`B`,`C`,etc., *bit* is in the range 0-7, and *polarity* is `ACTIVE_LOW` or `ACTIVE_HIGH`.
 
 ### Open-collector outputs 
 You can also specity a "polarity" of `ACTIVE_LOW_OC` for an active-low open-collector output. 
 
-AVR controllers don't really have pins that can be programmed as open-collector outputs, like teh more modern STM controllers. But we can simulate this: to set an output active (low), program the pin as output and low-level, and to set an output inactive (high), program it as an input withput a pull-up)
+AVR controllers don't really have pins that can be programmed as open-collector outputs, like the more modern STM controllers. But we can simulate this: to set an output active (low), program the pin as output and low-level, and to set an output inactive (high), program it as an input withput a pull-up)
 
 ## Configuring a pin
 
@@ -102,7 +102,7 @@ _delay(100);
 SET_HIGH(_I2C_SCL);
 ```
 
-When defining your logical pins, you can refer to the controller-specific pin assignment, and just specify a polarity:
+When defining your logical signals, you can refer to the controller-specific pin assignment, and just specify a polarity:
 ```C
 #define led _OC0A(ACTIVE_LOW)
 #define button _INT0(ACTIVE_LOW)
@@ -130,19 +130,19 @@ and the voltage at pin PC2 is currently 0 Volt, then
 * `IS_HIGH(BUTTON)` returns `false`
 * `IS_LOW(BUTTON)` returns `true`
 
-## Setting output pins
+## Setting output signals
 
-Use these macros to set the state of an output pin:
-* `ASSERT(pin)` sets the output to *active*, i.e. high for an `ACTIVE_HIGH` pin or low for an `ACTIVE_LOW` pin
-* `NEGATE(pin)` sets the output to *not active*, i.e. low for an `ACTIVE_HIGH` pin or high for an `ACTIVE_LOW` pin
+Use these macros to set the state of an output signal:
+* `ASSERT(pin)` or `SET_TRUE(pin)` sets the output to *active*, i.e. high for an `ACTIVE_HIGH` pin or low for an `ACTIVE_LOW` pin
+* `NEGATE(pin)` or `SET_FALSE(pin)` sets the output to *not active*, i.e. low for an `ACTIVE_HIGH` pin or high for an `ACTIVE_LOW` pin
 * `SET_HIGH(pin)` sets the output to *high*, irrespective of polarity
 * `SET_LOW(pin)` sets the output to *low*, irrespective of polarity
 * `TOGGLE(pin)` flips the output
 * `SET_PA(pin,value)` sets the output based on expression `value`, i.e. sets it to *active* if `value!=0` or to *not active* if `value==0`
 
-## Direct access to pin definition
+## Direct access to signal definition
 
-Sometimes, you will need to convert your pin definition to a "classic" pin name like PC4, or you need direct access to the port register or data direction register. Use these macros to get that access:
+Sometimes, you will need to convert your signal definition to a "classic" pin name like PC4, or you need direct access to the port register or data direction register. Use these macros to get that access:
 
 | Macro          | Description                  | Example   |
 | -------------- | ---------------------------- | ------- |
@@ -153,12 +153,12 @@ Sometimes, you will need to convert your pin definition to a "classic" pin name 
 | portNAME       | Letter of port               | C       |
 | portBIT        | Bit number                   | 3       |
 
-The example is what you get if the pin has been defined as 
+The example is what you get if the signal has been defined as 
 ```C
 #define mypin C,3,ACTIVE_HIGH
 ```
 
-## Converting `stdpins.h` pin definitions to Arduino pin numbers
+## Converting `stdpins.h` signal definitions to Arduino pin numbers
 
 When you need to specify a pin to an Arduino library function, use the `ARDUINO_PIN` macro:
 ```
@@ -170,7 +170,7 @@ Currently, this only works for ATmega168/328 based Arduino boards, and for ATmeg
 
 ## Pin change interrrupts
 
-These pin definitions can also be used in conjunction with pin change interrupts (in controllers that support this feature).
+These signal definitions can also be used in conjunction with pin change interrupts (in controllers that support this feature).
 
 Say you have connected a button to input PC2 of your ATmega328:
 ```C
@@ -209,7 +209,7 @@ All of this works well if you use only *one* pin change interrupt per port. If y
 
 ## Performance
 
-A nice side effect is that using the macros in this package also consumes less memory, and is faster than the standard Arduino I/O functions. I tested this on an Arduino Nano clone at 16 MHz. A simple loop that toggles an output pin using the `stdpins` macros looks like this
+As a nice side effect of using the macros in this package, your program will consume less memory, and will be faster than the standard Arduino I/O functions. I tested this on an Arduino Nano clone at 16 MHz. A simple loop that toggles an output pin using the `stdpins` macros looks like this
 ```
     #define LED B,5,ACTIVE_HIGH
     for (;;) {
@@ -225,7 +225,7 @@ If you use the Arduino functions, it would look like this
         digitalWrite( pinLED, HIGH );
     }
 ```
-A minimal program with this loop uses 438 bytes flash memory with `stdpins`, and 722 bytes with the Arduino functions. 
+A minimal program with this loop used 438 bytes flash memory with `stdpins`, and 722 bytes with the Arduino functions. 
 
 One cycle through the loop takes 0.375µs with `stdpins`, and 6.7µs with Arduino ... if the pin value is known at compile time. If the pin value is in a variable, so you use `SET_PA(LED;var)` or `digitalWrite(pinLED,var)`, then the times are 1.6µs vs 7.0µs.
 
